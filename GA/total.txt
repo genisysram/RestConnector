@@ -1,4 +1,7 @@
-SET vClient_id = 218772642678-dlp5nqutp9cf24ah2j0ovmoki7hr6bk4.apps.googleusercontent.com;SET vClient_secret = MunI6CZ4-6RuoMztyDwAt-O3;SET vRefresh_token = 1/bzU5Jc_DqZJrS5fqRIxUAeOaYGZPJ8xK3l-VkwnS9_IMEudVrK5jSpoR30zcRFq6;
+SET vClient_id = 218772642678-dlp5nqutp9cf24ah2j0ovmoki7hr6bk4.apps.googleusercontent.com;
+SET vClient_secret = MunI6CZ4-6RuoMztyDwAt-O3;
+SET vRefresh_token = 1/O_SDwF1T612CjBYRebpqFnGesVDSWWdcrJZi3vd7WvQ;
+
 IF vTokenExpires <= now() THEN // if access_token expired request a new one using the refresh_token
 
   LET vRequestBody ='';

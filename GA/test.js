@@ -25,10 +25,9 @@ fs.readFile('./client_secret_clientId.json', function processClientSecrets(err, 
   // Gmail API.
   content = JSON.parse(content);
   authorize(content, function(tokens) {
-    console.log(tokens.refresh_token);
-    fs.writeFile('script.txt', 'SET vClient_id = ' + content.web.client_id + ';' + '\n'
-                            + 'SET vClient_secret = ' + content.web.client_secret + ';' + '\n'
-                            + 'SET vRefresh_token = ' + tokens.refresh_token + ';' + '\n', function(err) {
+    fs.writeFile('script.txt', 'SET vClient_id = ' + content.web.client_id + ';\n'
+                            + 'SET vClient_secret = ' + content.web.client_secret + ';\n'
+                            + 'SET vRefresh_token = ' + tokens.refresh_token + ';\n', function(err) {
       if(err) throw(err);
       concat(['script.txt', 'refresh_script.txt'], './total.txt', function(err, result) {
         console.log(result.outputData);
@@ -55,19 +54,19 @@ function authorize(credentials, callback) {
     approval_prompt: 'force'
   });
 
-  console.log('Visit the url in your browser and click Allow: ', url);
+  console.log('Visit the url in your browser and click Allow: \n', url);
   rl.question('Please copy and paste the url after click Allow or directly enter the code from the website here: ', function (codeOrUrl) {
     rl.close();
     // request access token
     if(validator.isURL(codeOrUrl)) {
       codeOrUrl = codeOrUrl.substr(codeOrUrl.indexOf('=') + 1);
     }
-    console.log(codeOrUrl);
     oauth2Client.getToken(codeOrUrl, function (err, tokens) {
       if (err) {
         return callback(err);
       }
-
+      console.log('\n\nThis is your token, please copy and paste the following fields to the REST Connector "Query Header" with\n\nName: Authorization\nValue: Bearer '
+                  + tokens.access_token);
       callback(tokens);
     });
   })
