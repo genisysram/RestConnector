@@ -4,10 +4,16 @@ var google = require('googleapis');
 var OAuth2 = google.auth.OAuth2;
 var config = require('./config.json');
 var concat = require('concatenate-files');
+var validator = require('validator');
 
 // If modifying these scopes, delete your previously saved credentials
 // at ~/.credentials/gmail-nodejs-quickstart.json
 var SCOPES = config.scopes;
+
+var rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
 // Load client secrets from a local file.
 fs.readFile('./client_secret_clientId.json', function processClientSecrets(err, content) {
@@ -20,21 +26,15 @@ fs.readFile('./client_secret_clientId.json', function processClientSecrets(err, 
   content = JSON.parse(content);
   authorize(content, function(tokens) {
     console.log(tokens.refresh_token);
-    fs.writeFile('script.txt', 'SET vClient_id = ' + content.web.client_id + ';'
-                            + 'SET vClient_secret = ' + content.web.client_secret + ';'
-                            + 'SET vRefresh_token = ' + tokens.refresh_token + ';', function(err) {
+    fs.writeFile('script.txt', 'SET vClient_id = ' + content.web.client_id + ';' + '\n'
+                            + 'SET vClient_secret = ' + content.web.client_secret + ';' + '\n'
+                            + 'SET vRefresh_token = ' + tokens.refresh_token + ';' + '\n', function(err) {
       if(err) throw(err);
       concat(['script.txt', 'refresh_script.txt'], './total.txt', function(err, result) {
-        console.log('Please copy the following script or everyting in the total.txt file to your data-load-eiditor');
         console.log(result.outputData);
       })
     })
   });
-});
-
-var rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
 });
 
 /**
@@ -56,10 +56,14 @@ function authorize(credentials, callback) {
   });
 
   console.log('Visit the url in your browser and click Allow: ', url);
-  rl.question('Enter the code from the website here: ', function (code) {
+  rl.question('Please copy and paste the url after click Allow or directly enter the code from the website here: ', function (codeOrUrl) {
     rl.close();
     // request access token
-    oauth2Client.getToken(code, function (err, tokens) {
+    if(validator.isURL(codeOrUrl)) {
+      codeOrUrl = codeOrUrl.substr(codeOrUrl.indexOf('=') + 1);
+    }
+    console.log(codeOrUrl);
+    oauth2Client.getToken(codeOrUrl, function (err, tokens) {
       if (err) {
         return callback(err);
       }
