@@ -1,0 +1,23 @@
+SET vClient_id = 218772642678-dlp5nqutp9cf24ah2j0ovmoki7hr6bk4.apps.googleusercontent.com;SET vClient_secret = MunI6CZ4-6RuoMztyDwAt-O3;SET vRefresh_token = 1/bzU5Jc_DqZJrS5fqRIxUAeOaYGZPJ8xK3l-VkwnS9_IMEudVrK5jSpoR30zcRFq6;
+IF vTokenExpires <= now() THEN // if access_token expired request a new one using the refresh_token
+
+  LET vRequestBody ='';
+  LET vRequestBodyvRequestBody = vRequestBody & 'grant_type=refresh_token';
+  LET vRequestBodyvRequestBody = vRequestBody & '&client_id=' & '$(vClient_id)';
+  LET vRequestBodyvRequestBody = vRequestBody & '&client_secret=' & '$(vClient_secret)';
+  LET vRequestBodyvRequestBody = vRequestBody & '&refresh_token=' & '$(vRefresh_token)';
+
+  access_token:
+  SQL SELECT
+  "token_type",
+  "access_token",
+  "expires_in"
+  FROM JSON (wrap on) "root"
+  WITH CONNECTION (
+  BODY "$(vRequestBody)"
+  );
+
+  LET vExpiresIn = peek('expires_in',0,'access_token');
+  LET vAccessToken = peek('access_token',0,'access_token');
+  LET vTokenExpires = timestamp(now() + $(vExpiresIn)/86400);
+ENDIF
