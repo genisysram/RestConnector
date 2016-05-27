@@ -2,8 +2,6 @@ var google = require('googleapis');
 var config = require('./config.json');
 // var fs = require('fs');
 
-response_type=code&client_id=218772642678-dlp5nqutp9cf24ah2j0ovmoki7hr6bk4.apps.googleusercontent.com&access_type=offline
-
 var authorization_endpoint = 'https://accounts.google.com/o/oauth2/auth';
 var token_endpoint = 'https://www.googleapis.com/oauth2/v4/token',
 var token_location = 'bearer';

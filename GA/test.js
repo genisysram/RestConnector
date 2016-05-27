@@ -21,8 +21,7 @@ fs.readFile('./client_secret_clientId.json', function processClientSecrets(err, 
     console.log('Error loading client secret file: ' + err);
     return;
   }
-  // Authorize a client with the loaded credentials, then call the
-  // Gmail API.
+
   content = JSON.parse(content);
   authorize(content, function(tokens) {
     fs.writeFile('script.txt', 'SET vClient_id = ' + content.web.client_id + ';\n'
@@ -46,7 +45,7 @@ fs.readFile('./client_secret_clientId.json', function processClientSecrets(err, 
 function authorize(credentials, callback) {
   var clientSecret = credentials.web.client_secret;
   var clientId = credentials.web.client_id;
-  var redirectUrl = credentials.web.redirect_uris[1];
+  var redirectUrl = credentials.web.redirect_uris[0];
   var oauth2Client = new OAuth2(clientId, clientSecret, redirectUrl);
   var url = oauth2Client.generateAuthUrl({
     access_type: 'offline', // 'online' (default) or 'offline' (gets refresh_token)
@@ -54,7 +53,7 @@ function authorize(credentials, callback) {
     approval_prompt: 'force'
   });
 
-  console.log('Visit the url in your browser and click Allow: \n', url);
+  console.log('Visit the url in your browser and click Allow:\n', url);
   rl.question('Please copy and paste the url after click Allow or directly enter the code from the website here: ', function (codeOrUrl) {
     rl.close();
     // request access token
