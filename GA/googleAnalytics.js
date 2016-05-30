@@ -1,10 +1,44 @@
+var fs = require('fs');
+var readline = require('readline');
 var google = require('googleapis');
+var OAuth2 = google.auth.OAuth2;
 var config = require('./config.json');
-// var fs = require('fs');
+var concat = require('concatenate-files');
+var validator = require('validator');
 
-var authorization_endpoint = 'https://accounts.google.com/o/oauth2/auth';
-var token_endpoint = 'https://www.googleapis.com/oauth2/v4/token',
-var token_location = 'bearer';
+// If modifying these scopes, delete your previously saved credentials
+// at ~/.credentials/gmail-nodejs-quickstart.json
+var SCOPES = config.scopes;
+
+var rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+// Load client secrets from a local file.
+fs.readFile('./client_secret_clientId.json', function processClientSecrets(err, content) {
+  if (err) {
+    console.log('Error loading client secret file: ' + err);
+    return;
+  }
+
+  content = JSON.parse(content);
+  authorize(content, function(tokens) {
+    fs.writeFile('script.txt', 'SET vClient_id = ' + content.web.client_id + ';\n'
+                            + 'SET vClient_secret = ' + content.web.client_secret + ';\n'
+                            + 'SET vRefresh_token = ' + tokens.refresh_token + ';\n', function(err) {
+      if(err) throw(err);
+      concat(['script.txt', 'refresh_script.txt'], './total.txt', function(err, result) {
+        console.log('Please do the following:');
+        console.log('1. Go to your app and Insert the full script that rest connector created for you(By pressing second button: select data).');
+        console.log('2. Find  FROM JSON (wrap on) xxx;  and replace it with   FROM JSON (wrap on) xxx WITH CONNECTION (  HTTPHEADER "Authorization" "Bearer $(vAccessToken)");');
+        console.log('3. Insert the following script to your script file "ABOVE" the script that REST connector created for you:\n');
+        console.log(result.outputData);
+        console.log('\n4. Click the load data button to test whether it works');
+      })
+    })
+  });
+});
 
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
@@ -14,132 +48,30 @@ var token_location = 'bearer';
  * @param {function} callback The callback to call with the authorized client.
  */
 function authorize(credentials, callback) {
-  var clientSecret = credentials.installed.client_secret;
-  var clientId = credentials.installed.client_id;
-  var redirectUrl = credentials.installed.redirect_uris[0];
-  var auth = new googleAuth();
-  var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
+  var clientSecret = credentials.web.client_secret;
+  var clientId = credentials.web.client_id;
+  var redirectUrl = credentials.web.redirect_uris[0];
+  var oauth2Client = new OAuth2(clientId, clientSecret, redirectUrl);
+  var url = oauth2Client.generateAuthUrl({
+    access_type: 'offline', // 'online' (default) or 'offline' (gets refresh_token)
+    scope: SCOPES, // If you only need one scope you can pass it as string
+    approval_prompt: 'force'
+  });
 
-  // Check if we have previously stored a token.
-  fs.readFile(TOKEN_PATH, function(err, token) {
-    if (err) {
-      getNewToken(oauth2Client, callback);
-    } else {
-      oauth2Client.credentials = JSON.parse(token);
-      callback(oauth2Client);
-    }
-  });
-}
-
-/**
- * Get and store new token after prompting for user authorization, and then
- * execute the given callback with the authorized OAuth2 client.
- *
- * @param {google.auth.OAuth2} oauth2Client The OAuth2 client to get token for.
- * @param {getEventsCallback} callback The callback to call with the authorized
- *     client.
- */
-function getNewToken(oauth2Client, callback) {
-  var authUrl = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: SCOPES
-  });
-  console.log('Authorize this app by visiting this url: ', authUrl);
-  var rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-  rl.question('Enter the code from that page here: ', function(code) {
+  console.log('Visit the url in your browser and click Allow:\n', url);
+  rl.question('Please copy and paste the url after click Allow or directly enter the code from the website here: ', function (codeOrUrl) {
     rl.close();
-    oauth2Client.getToken(code, function(err, token) {
+    // request access token
+    if(validator.isURL(codeOrUrl)) {
+      codeOrUrl = codeOrUrl.substr(codeOrUrl.indexOf('=') + 1);
+    }
+    oauth2Client.getToken(codeOrUrl, function (err, tokens) {
       if (err) {
-        console.log('Error while trying to retrieve access token', err);
-        return;
+        return callback(err);
       }
-      oauth2Client.credentials = token;
-      storeToken(token);
-      callback(oauth2Client);
+      console.log('\n\nThis is your token, please copy and paste the following fields to the REST Connector "Query Header" by clicking "Create New Connection" in qliksense\n\nName: Authorization\nValue: Bearer '
+                  + tokens.access_token);
+      callback(tokens);
     });
-  });
-}
-
-/**
- * Store token to disk be used in later program executions.
- *
- * @param {Object} token The token to store to disk.
- */
-function storeToken(token) {
-  try {
-    fs.mkdirSync(TOKEN_DIR);
-  } catch (err) {
-    if (err.code != 'EEXIST') {
-      throw err;
-    }
-  }
-  fs.writeFile(TOKEN_PATH, JSON.stringify(token));
-  console.log('Token stored to ' + TOKEN_PATH);
-}
-
-/**
- * Lists the labels in the user's account.
- *
- * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
- */
-function listLabels(auth) {
-  var gmail = google.gmail('v1');
-  gmail.users.labels.list({
-    auth: auth,
-    userId: 'me',
-  }, function(err, response) {
-    if (err) {
-      console.log('The API returned an error: ' + err);
-      return;
-    }
-    var labels = response.labels;
-    if (labels.length == 0) {
-      console.log('No labels found.');
-    } else {
-      console.log('Labels:');
-      for (var i = 0; i < labels.length; i++) {
-        var label = labels[i];
-        console.log('- %s', label.name);
-      }
-    }
-  });
-}
-
-function findChoice(input) {
-  input = process.stdin.read();
-  while(isNaN(input) || input > 2 || input < 1) {
-    console.log('Please enter valid option');
-    findChoice(input);
-  }
-}
-
-function choose() {
-  console.log('Welcome to Google Analytics auto-refresh script generator!');
-  console.log('Please choose one of the following authorization ways to generate your script:');
-  console.log('1. Have Current client_secret.json file downloaded from google api console.');
-  console.log('2. Have NOT downloaded the secret file, needed to input the client_id and secret');
-
-  var choice;
-
-  findChoice(choice).then(function(choice) {
-    if(choice == 1) {
-      console.log('Please enter the path of client_secret.json');
-      var path;
-      path = process.stdin.read();
-      fs.readFile(path, function(err, content) {
-        if(err) {
-          console.log(err);
-          return;
-        }
-
-        authorize(JSON.parse(content));
-      })
-    }
   })
 }
-
-
-choose();
