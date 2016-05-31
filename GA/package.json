@@ -1,0 +1,15 @@
+{
+  "name": "GA-script-generator",
+  "version": "1.2.0",
+  "description": "This is a basic script generator for Qlik Sense Desktop version to use Google Analytics from rest connector",
+  "main": "test.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node test.js"
+  },
+  "author": "coop",
+  "license": "ISC",
+  "dependencies": {
+    "googleapis": "^7.0.0"
+  }
+}
