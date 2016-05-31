@@ -1,23 +1,27 @@
 
-IF vTokenExpires <= now() THEN // if access_token expired request a new one using the refresh_token
+IF vTokenExpires <= now() THEN
 
-  LET vRequestBody ='';
-  LET vRequestBodyvRequestBody = vRequestBody & 'grant_type=refresh_token';
-  LET vRequestBodyvRequestBody = vRequestBody & '&client_id=' & '$(vClient_id)';
-  LET vRequestBodyvRequestBody = vRequestBody & '&client_secret=' & '$(vClient_secret)';
-  LET vRequestBodyvRequestBody = vRequestBody & '&refresh_token=' & '$(vRefresh_token)';
+LET vRequestBody ='';
+LET vRequestBody = vRequestBody & 'grant_type=refresh_token';
+LET vRequestBody = vRequestBody & '&client_id=' & '$(vClient_id)';
+LET vRequestBody = vRequestBody & '&client_secret=' & '$(vClient_secret)';
+LET vRequestBody = vRequestBody & '&refresh_token=' & '$(vRefresh_token)';
 
-  access_token:
+access_token:
   SQL SELECT
-  "token_type",
   "access_token",
+  "token_type",
   "expires_in"
   FROM JSON (wrap on) "root"
   WITH CONNECTION (
+  	URL "https://www.googleapis.com/oauth2/v4/token",
+  	HTTPHEADER "Content-Type" "application/x-www-form-urlencoded",
   BODY "$(vRequestBody)"
   );
 
-  LET vExpiresIn = peek('expires_in',0,'access_token');
-  LET vAccessToken = peek('access_token',0,'access_token');
-  LET vTokenExpires = timestamp(now() + $(vExpiresIn)/86400);
+
+LET vExpiresIn = peek('expires_in',0,'access_token');
+LET vAccessToken = peek('access_token',0,'access_token');
+LET vTokenExpires = timestamp(now() + $(vExpiresIn)/86400);
+
 ENDIF

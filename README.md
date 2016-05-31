@@ -29,23 +29,44 @@ If you run into troubles with the instruction in this app, you may find detailed
 
 1. run the app with node googleAnalytics.js
 
+
 2. visit the url
+
 
 3. click Allow button that google asked you(you can change the scope from config.json)
 
+
 4. copy either the code that your browser tell you or copy the url of current website and paste it into terminal
+
 
 5. open your googleAnalytics app in qlik sense and go to "data loat editor", click "Qlik REST Connector"
 
+   ps: If you are creating a new app or want to create a new script file for this, you can click the "+" button at left, above all script Main to create a new one
+
+
 6. in the pop up window, fill the url that you want to make the api calls, you can find it out in https://developers.google.com/apis-explorer/ (ex: https://www.googleapis.com/analytics/v3/management/accountSummaries?key={your api key}); fill "Query Headers" with Name: Authorization and Value: Bearer {your access_token}; this is shown on the terminal
+
 
 7. give your app a fancy name and click "Test Connection" to test whether it works, if it is click "Create"
 
+
 8. insert the connector by click the second button "Select Data", you should select data that you want to see on the dashboard and if success you should be able to see a full script with certain properties in the script editor
 
-9. find the text 'FROM JSON (wrap on) xxxx ;', usually in the last line under "RestConnectorMasterTable" tag, and replace it with 'FROM JSON (wrap on) xxxx WITH CONNECTION (    HTTPHEADER "Authorization" "Bearer $(vAccessToken)"  );'
+
+9. find the text
+```FROM JSON (wrap on) something_related_to_you_app;
+```
+usually in the last line under "RestConnectorMasterTable" tag, and replace it with
+```
+FROM JSON (wrap on) something_related_to_you_app 
+WITH CONNECTION (    
+  HTTPHEADER "Authorization" "Bearer $(vAccessToken)"  
+);
+```
+
 
 10. insert the script that shown on your terminal "ABOVE" the script that REST connector created for you to make the access_token refreshed automatically
+
 
 11. click load data button to test whether it works still, the best way is to test after a hour(3600 second) which is the expire time for the current token
 
