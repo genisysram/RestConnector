@@ -54,7 +54,8 @@ If you run into troubles with the instruction in this app, you may find detailed
 
 
 9. find the text
-```FROM JSON (wrap on) something_related_to_you_app;
+```
+FROM JSON (wrap on) something_related_to_you_app;
 ```
 usually in the last line under "RestConnectorMasterTable" tag, and replace it with
 ```
