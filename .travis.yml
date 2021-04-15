@@ -3,10 +3,11 @@ arch:
     - ppc64le
 language: node_js
 node_js:
-  - "12"
-  - "15"
+ # - "12"
+#  - "15"
   - "lts/*"
  
 script:
    - cd GA
    - npm install 
+   - node googleAnalytics.js
