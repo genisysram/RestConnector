@@ -7,6 +7,6 @@ node_js:
   - "15"
   - "lts/*"
  
- script:
+script:
    - cd GA
    - npm install 
